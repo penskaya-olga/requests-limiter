@@ -1,0 +1,8 @@
+app\test\annotation\AddressData.class
+app\test\exception\GlobalExceptionHandler.class
+app\test\SpringBootTestApplication.class
+app\test\annotation\CheckRequest.class
+app\test\exception\InternalServerException.class
+app\test\exception\BadGatewayException.class
+app\test\controller\TestController.class
+app\test\annotation\CheckRequestAspect.class
