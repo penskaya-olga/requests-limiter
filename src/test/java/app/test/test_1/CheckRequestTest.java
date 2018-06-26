@@ -2,41 +2,32 @@ package app.test.test_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import javax.management.timer.TimerMBean;
-
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import app.test.annotation.AddressData;
-import app.test.exception.BadGatewayException;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@Ignore
 public class CheckRequestTest {
 	
 	private final String IP_ADDRESS_MASK = "192.168.0.%d";	
@@ -65,72 +56,75 @@ public class CheckRequestTest {
 	}
 	
 	@Test
-    public void checkRequest() throws InterruptedException{		
-//		CountDownLatch counter = new CountDownLatch(THREADS_COUNT*REQUESTS_COUNT);
-//		Executor executor = Executors.newFixedThreadPool(THREADS_COUNT);		
-//		
-//		for(int i = 1; i <= THREADS_COUNT; i++) {
-//			final int currentThreadNumber = i;
-//			String ip = String.format(IP_ADDRESS_MASK, currentThreadNumber);
-//			executor.execute(new CheckRequestRunnable(counter, ip, REQUESTS_COUNT));
-//		}
-//		counter.await();
-//		
-//		assertThat(currentIpsMap.get()).hasSameSizeAs(ipsArray);
-//		assertThat(previousIpsMap.get()).hasSameSizeAs(ipsArray);
-//		
-//		for (String key : currentIpsMap.get().keySet()) {
-//			assertThat(key).isIn(ipsArray.keySet());
-//		}
-//		
-//		for (String key : previousIpsMap.get().keySet()) {
-//			assertThat(key).isIn(ipsArray.keySet());
-//		}
-//		
-//		for (Entry<String,Integer> entry : ipsArray.entrySet()) {
-//			assertThat(currentIpsMap.get().get(entry.getKey())).isSameAs(entry.getValue());
-//		}
-//		
-//		//check previousIpsMap
-//		for (Entry<String,Integer> entry : ipsArray.entrySet()) {
-//			assertThat(previousIpsMap.get().get(entry.getKey())).isSameAs(entry.getValue());
-//		}
+    public void checkRequest() throws InterruptedException{	
+		currentIpsMap.get().clear();
+		previousIpsMap.get().clear();
+		CountDownLatch counter = new CountDownLatch(THREADS_COUNT * REQUESTS_COUNT);
+		Executor executor = Executors.newFixedThreadPool(THREADS_COUNT);		
+		
+		for(int i = 1; i <= THREADS_COUNT; i++) {
+			final int currentThreadNumber = i;			
+			executor.execute(new CheckRequestRunnable(counter, 
+					String.format(IP_ADDRESS_MASK, currentThreadNumber), 
+					REQUESTS_COUNT));
+		}
+		counter.await();
+		
+		assertThat(currentIpsMap.get()).hasSameSizeAs(ipsArray);
+		assertThat(previousIpsMap.get()).hasSameSizeAs(ipsArray);
+		
+		for (String key : currentIpsMap.get().keySet()) {
+			assertThat(key).isIn(ipsArray.keySet());
+		}
+		
+		for (String key : previousIpsMap.get().keySet()) {
+			assertThat(key).isIn(ipsArray.keySet());
+		}
+		
+		for (Entry<String,Integer> entry : ipsArray.entrySet()) {
+			assertThat(currentIpsMap.get().get(entry.getKey())).isSameAs(entry.getValue());
+		}
+		
+		//check previousIpsMap
+		for (Entry<String,Integer> entry : ipsArray.entrySet()) {
+			assertThat(previousIpsMap.get().get(entry.getKey())).isSameAs(entry.getValue());
+		}
 	}
 	
 	@Test
 	public void checkTimeInterval() throws InterruptedException, ParseException {
-//		
-//	    CountDownLatch counter = new CountDownLatch(126);	    
-//	    
-//		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-//		ScheduledExecutorService executor2 = Executors.newSingleThreadScheduledExecutor();
-//		
-//		executor.scheduleAtFixedRate(new CheckRequestRunnable(counter, 
-//				String.format(IP_ADDRESS_MASK, 1), 1), 0, 60, TimeUnit.SECONDS);	
-//		
-//		executor.schedule(new CheckRequestRunnable(counter, 
-//				String.format(IP_ADDRESS_MASK, 1), 49), 50, TimeUnit.SECONDS);		
-//		
-//		executor.schedule(new CheckRequestRunnable(counter, 
-//				String.format(IP_ADDRESS_MASK, 1), 2), 70, TimeUnit.SECONDS);
-//		
-//		executor.schedule(new CheckRequestRunnable(counter, 
-//				String.format(IP_ADDRESS_MASK, 1), 5), 130, TimeUnit.SECONDS);
-//		
-//				
-//		executor2.scheduleAtFixedRate(new CheckRequestRunnable(counter, 
-//				String.format(IP_ADDRESS_MASK, 2), 30), 10, 60, TimeUnit.SECONDS);
-//		
-//		executor2.schedule(new CheckRequestRunnable(counter, 
-//				String.format(IP_ADDRESS_MASK, 2), 5), 90, TimeUnit.SECONDS);		
-//		
-//		executor2.schedule(new CheckRequestRunnable(counter, 
-//				String.format(IP_ADDRESS_MASK, 2), 3), 260, TimeUnit.SECONDS);		
-//		
-//		
-//		counter.await();
-//		executor.shutdown();
-//		executor2.shutdown();
+		
+	    CountDownLatch counter = new CountDownLatch(126);	    
+	    
+		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+		ScheduledExecutorService executor2 = Executors.newSingleThreadScheduledExecutor();
+		
+		executor.scheduleAtFixedRate(new CheckRequestRunnable(counter, 
+				String.format(IP_ADDRESS_MASK, 1), 1), 0, 60, TimeUnit.SECONDS);	
+		
+		executor.schedule(new CheckRequestRunnable(counter, 
+				String.format(IP_ADDRESS_MASK, 1), 49), 50, TimeUnit.SECONDS);		
+		
+		executor.schedule(new CheckRequestRunnable(counter, 
+				String.format(IP_ADDRESS_MASK, 1), 2), 70, TimeUnit.SECONDS);
+		
+		executor.schedule(new CheckRequestRunnable(counter, 
+				String.format(IP_ADDRESS_MASK, 1), 5), 130, TimeUnit.SECONDS);
+		
+				
+		executor2.scheduleAtFixedRate(new CheckRequestRunnable(counter, 
+				String.format(IP_ADDRESS_MASK, 2), 30), 10, 60, TimeUnit.SECONDS);
+		
+		executor2.schedule(new CheckRequestRunnable(counter, 
+				String.format(IP_ADDRESS_MASK, 2), 5), 90, TimeUnit.SECONDS);		
+		
+		executor2.schedule(new CheckRequestRunnable(counter, 
+				String.format(IP_ADDRESS_MASK, 2), 3), 260, TimeUnit.SECONDS);		
+		
+		
+		counter.await();
+		executor.shutdown();
+		executor2.shutdown();
 	}
 	
 	
@@ -231,8 +225,7 @@ public class CheckRequestTest {
 				} else {
 					counter.countDown();
 				}
-		    }	
-		    System.out.println("_________________________ " + requests);
+		    }		    
 		}		
 	}
 		
